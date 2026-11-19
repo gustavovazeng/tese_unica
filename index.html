@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Chrys — Distribuição de Conteúdo</title>
+<title>Tese Única — Distribuição de Conteúdo</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -248,7 +248,7 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.4;cursor:pointer;fi
     <div class="funil-btn" style="cursor:default">
       <span class="funil-dot" id="funil-dot"></span>
       <div>
-        <div class="funil-name" id="funil-name" style="white-space:nowrap">Chrys - Distribuição</div>
+        <div class="funil-name" id="funil-name" style="white-space:nowrap">Tese Única - Distribuição</div>
         <div class="funil-status" id="funil-status">ativo</div>
       </div>
     </div>
@@ -290,7 +290,7 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.4;cursor:pointer;fi
 <script>
 
 // ════════════════════════════════════════════════════════════════════════
-//  CONFIGURAÇÃO — Chrys · Distribuição de Conteúdo
+//  CONFIGURAÇÃO — Tese Única · Distribuição de Conteúdo
 // ════════════════════════════════════════════════════════════════════════
 // ID da planilha: o trecho entre /d/ e /edit na URL do Google Sheets.
 // A planilha precisa estar compartilhada como "Qualquer pessoa com o link → Leitor".
@@ -299,17 +299,6 @@ const GAPI_KEY  = "AIzaSyDFyD63YrWNWSX2gjZWdVD5Bq8uoazXzbE";
 // Aba com o export do Meta Ads (planilha "Base dash - Tese única")
 const SHEET_SEG = "Base seguidores";
 
-// ── Distribuição metas ──────────────────────────────────────────────────
-const METAS_DIST={
-  cpVisita: {val:0.05,  higher:false, label:"R$0,05"},
-  cpSeg:    {val:1.03,  higher:false, label:"R$1,03"},
-  txConv:   {val:5.27,  higher:true,  label:"5,27%"},
-  hookRate: {val:25.56, higher:true,  label:"25,56%"},
-  holdRate: {val:29.02, higher:true,  label:"29,02%"},
-  cpc:      {val:0.05,  higher:false, label:"R$0,05"},
-  ctr:      {val:2.68,  higher:true,  label:"2,68%"},
-  cpm:      {val:1.34,  higher:false, label:"R$1,34"},
-};
 
 // Chart colors — dark mode
 const CHART_COLOR = "#3b82f6";
@@ -925,24 +914,24 @@ function renderDistPrincipal(){
   const today=todayISO();
 
   const cpVisitaV=tot.profileVisits>0?tot.spend/tot.profileVisits:0;
-  const cpVisitaC=cpVisitaV>0?statusColor(cpVisitaV,METAS_DIST.cpVisita.val,false):"var(--text-strong)";
-  const cpSegC=tot.cps>0?statusColor(tot.cps,METAS_DIST.cpSeg.val,false):"var(--text-strong)";
+  const cpVisitaC="var(--text-strong)";
+  const cpSegC="var(--text-strong)";
 
   el.innerHTML=`
     <div class="hdr" style="margin-bottom:6px">
       <div>
-        <div class="hdr-title">Chrys — Distribuição de Conteúdo</div>
+        <div class="hdr-title">Tese Única — Distribuição de Conteúdo</div>
         <div class="hdr-sub">atualizado em: ${fDateBR(today)} · ${daily.length} dias</div>
       </div>
-      <div style="display:flex;align-items:center;gap:16px">${statusLegend()}</div>
+      
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin-bottom:18px">
       ${kpiCard("Investimento",fBRL(tot.spend),"","var(--text-strong)")}
       ${kpiCard("Visitas ao Perfil",tot.profileVisits.toLocaleString("pt-BR"),"","var(--text-strong)")}
-      ${kpiCard("Custo/Visita",cpVisitaV>0?fBRL(cpVisitaV):"—","meta "+fBRL(METAS_DIST.cpVisita.val),cpVisitaC,false,cpVisitaV||null,false)}
+      ${kpiCard("Custo/Visita",cpVisitaV>0?fBRL(cpVisitaV):"—","",cpVisitaC)}
       ${kpiCard("Seguidores",tot.seguidores.toLocaleString("pt-BR"),"","var(--text-strong)")}
-      ${kpiCard("Custo/Seguidor",tot.cps>0?fBRL(tot.cps):"—","meta "+fBRL(METAS_DIST.cpSeg.val),cpSegC,false,tot.cps||null,false)}
+      ${kpiCard("Custo/Seguidor",tot.cps>0?fBRL(tot.cps):"—","",cpSegC)}
     </div>
 
     <div class="cc" style="margin-bottom:12px;position:relative">
@@ -982,15 +971,15 @@ function renderDistPrincipal(){
       </div>
       <canvas id="d-bar-vis"></canvas>
     </div>
-    <p class="foot">Base Seguidores (Meta Ads) · Google Sheets API v4</p>
+    <p class="foot">Base seguidores (Meta Ads) · Google Sheets API v4</p>
   `;
 
   requestAnimationFrame(()=>{
     const mW=document.getElementById("d-dual-cps")?.parentElement?.offsetWidth||720;
     const bW=document.getElementById("d-bar-seg")?.parentElement?.offsetWidth||720;
-    drawDistDual("d-dual-cps",daily,"cps",METAS_DIST.cpSeg.val,"Meta/Seg.",mW,200);
+    drawDistDual("d-dual-cps",daily,"cps",null,"",mW,200);
     drawDistBar("d-bar-seg",daily,"seguidores","#34d399",v=>v.toLocaleString("pt-BR"),bW,150);
-    drawDistDual("d-dual-cpv",daily,"cpVisita",METAS_DIST.cpVisita.val,"Meta/Visita",mW,200);
+    drawDistDual("d-dual-cpv",daily,"cpVisita",null,"",mW,200);
     drawDistBar("d-bar-vis",daily,"profileVisits","#60a5fa",v=>v.toLocaleString("pt-BR"),bW,150);
     setupTip("d-dual-cps","d-tip-cps",daily,[
       {key:"spend",color:CHART_INV,name:"Investimento"},
@@ -1017,9 +1006,9 @@ function renderDistTrafego(){
 
   const METRICS_ROW=[
     {key:"spend", lbl:"Investimento", fmt:fBRL, meta:null, higher:null},
-    {key:"ctr",   lbl:"CTR",          fmt:fPct, meta:METAS_DIST.ctr.val, higher:true},
-    {key:"cpm",   lbl:"CPM",          fmt:fBRL, meta:METAS_DIST.cpm.val, higher:false},
-    {key:"cpc",   lbl:"CPC",          fmt:fBRL, meta:METAS_DIST.cpc.val, higher:false},
+    {key:"ctr",   lbl:"CTR",          fmt:fPct, meta:null, higher:null},
+    {key:"cpm",   lbl:"CPM",          fmt:fBRL, meta:null, higher:null},
+    {key:"cpc",   lbl:"CPC",          fmt:fBRL, meta:null, higher:null},
   ];
 
   function metricsRow(obj){
@@ -1036,9 +1025,9 @@ function renderDistTrafego(){
   }
 
   const CHART_CONFIGS=[
-    {key:"ctr", lbl:"CTR", fmt:fPct, meta:METAS_DIST.ctr.val, metaLbl:"Meta "+METAS_DIST.ctr.label},
-    {key:"cpm", lbl:"CPM", fmt:fBRL, meta:METAS_DIST.cpm.val, metaLbl:"Meta "+METAS_DIST.cpm.label},
-    {key:"cpc", lbl:"CPC", fmt:fBRL, meta:METAS_DIST.cpc.val, metaLbl:"Meta "+METAS_DIST.cpc.label},
+    {key:"ctr", lbl:"CTR", fmt:fPct, meta:null, metaLbl:""},
+    {key:"cpm", lbl:"CPM", fmt:fBRL, meta:null, metaLbl:""},
+    {key:"cpc", lbl:"CPC", fmt:fBRL, meta:null, metaLbl:""},
   ];
 
   function dChart(c){
@@ -1069,7 +1058,7 @@ function renderDistTrafego(){
         <div class="hdr-title">Métricas de Tráfego — Distribuição</div>
         <div class="hdr-sub">atualizado em: ${fDateBR(today)} · ${daily.length} dias</div>
       </div>
-      <div>${statusLegend()}</div>
+      
     </div>
 
     <div class="section-lbl">Hoje — ${fDateBR(today)}</div>
@@ -1085,7 +1074,7 @@ function renderDistTrafego(){
     <div class="charts-2x3">
       ${CHART_CONFIGS.map(c=>dChart(c)).join("")}
     </div>
-    <p class="foot">Base Seguidores (Meta Ads) · Google Sheets API v4</p>`;
+    <p class="foot">Base seguidores (Meta Ads) · Google Sheets API v4</p>`;
 
   requestAnimationFrame(()=>{
     const sW=document.getElementById("dtc-ctr")?.parentElement?.offsetWidth||500;
@@ -1207,7 +1196,7 @@ function renderDistAnuncios(){
       ${kpiCard("Investimento",fBRL(tot.spend),"","var(--text-strong)")}
       ${kpiCard("Visitas ao Perfil",tot.profileVisits.toLocaleString("pt-BR"),"","var(--text-strong)")}
       ${kpiCard("Seguidores",tot.seguidores.toLocaleString("pt-BR"),"","var(--text-strong)")}
-      ${kpiCard("Custo/Seguidor",tot.cps>0?fBRL(tot.cps):"—",tot.cps>0?"meta "+fBRL(METAS_DIST.cpSeg.val):"",tot.cps>0?statusColor(tot.cps,METAS_DIST.cpSeg.val,false):"var(--text-strong)",false,tot.cps||null,false)}
+      ${kpiCard("Custo/Seguidor",tot.cps>0?fBRL(tot.cps):"—","","var(--text-strong)")}
     </div>
 
     <div style="color:var(--hint);font-size:11px;margin-bottom:6px">Clique para filtrar anúncios${hasCampFilter?' · <a href="#" onclick="S.selectedCamps=new Set();render();return false" style="color:var(--accent)">Limpar filtro</a>':''}</div>
@@ -1320,16 +1309,16 @@ function renderDistResumo(){
       `📶 *${label}*`,``,
       line("Investimento:",         m.spend,       fD,  null),
       line("Visitas ao Perfil:",    m.profileVisits, fN, null),
-      line("Custo/Visita:",         m.cpVisita,    fD,  METAS_DIST.cpVisita),
+      line("Custo/Visita:",         m.cpVisita,    fD,  null),
       line("Seguidores:",           m.seguidores,  fN,  null),
-      line("Custo/Seguidor:",       m.cpSeg,       fD,  METAS_DIST.cpSeg),``,
-      line("Hook Rate (3s/impr.):", m.hookRate,    fP,  METAS_DIST.hookRate),
-      line("Hold Rate (15s/3s):",   m.holdRate,    fP,  METAS_DIST.holdRate),
+      line("Custo/Seguidor:",       m.cpSeg,       fD,  null),``,
+      line("Hook Rate (3s/impr.):", m.hookRate,    fP,  null),
+      line("Hold Rate (15s/3s):",   m.holdRate,    fP,  null),
     ].join("\n");
   }
 
   const fullText=[
-    `*Chrys - Distribuição de Conteúdo*`,``,
+    `*Tese Única - Distribuição de Conteúdo*`,``,
     `_${dateLabel}_`,``,
     textBlock("Total", tot),``,``,
     textBlock("Ontem",ontem),``,``,
@@ -1363,12 +1352,12 @@ function renderDistResumo(){
       <div style="font-size:13px;font-weight:700;color:var(--text-strong);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">📶 ${label}</div>
       ${row("Investimento", m.spend, fD, null)}
       ${row("Visitas ao Perfil", m.profileVisits, fN, null)}
-      ${row("Custo/Visita", m.cpVisita, fD, METAS_DIST.cpVisita)}
+      ${row("Custo/Visita", m.cpVisita, fD, null)}
       ${row("Seguidores", m.seguidores, fN, null)}
-      ${row("Custo/Seguidor", m.cpSeg, fD, METAS_DIST.cpSeg)}
+      ${row("Custo/Seguidor", m.cpSeg, fD, null)}
       <div style="height:8px"></div>
-      ${row("Hook Rate", m.hookRate, fP, METAS_DIST.hookRate)}
-      ${row("Hold Rate", m.holdRate, fP, METAS_DIST.holdRate)}
+      ${row("Hook Rate", m.hookRate, fP, null)}
+      ${row("Hold Rate", m.holdRate, fP, null)}
       ${planRow}
     </div>`;
   }
