@@ -1257,6 +1257,9 @@ function renderDistResumo(){
   function fD(v){ return "R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function fP(v){ return v.toFixed(1).replace(".",",")+"%"; }
   function fN(v){ return v===0?"0":v.toLocaleString("pt-BR"); }
+  function fI(v){ return String(Math.round(v)); }
+  function fP1(v){ return v.toFixed(1)+"%"; }
+  function fP2(v){ return v.toFixed(2)+"%"; }
   function fDM(iso){ if(!iso)return "—"; const [,m,d]=iso.split("-"); return `${d}/${m}`; }
 
   function em(val, meta){
@@ -1300,20 +1303,21 @@ function renderDistResumo(){
 
   // ── Text for copy ─────────────────────────────────────────────────────────
   function textBlock(label, m){
-    function line(lbl, val, fmtFn, meta, pad=42){
-      const v=val===null?"#DIV/0!":fmtFn(val);
-      const dot=meta?(val===null?"":"\t"+(em(val,meta)||"🔴")+" Meta: "+meta.label):"";
-      return `${lbl.padEnd(pad," ")}${v}${dot}`;
+    function line(lbl, val, fmtFn){
+      const v=val===null?"—":fmtFn(val);
+      return `${lbl}\t${v}`;
     }
     return [
       `📶 *${label}*`,``,
-      line("Investimento:",         m.spend,       fD,  null),
-      line("Visitas ao Perfil:",    m.profileVisits, fN, null),
-      line("Custo/Visita:",         m.cpVisita,    fD,  null),
-      line("Seguidores:",           m.seguidores,  fN,  null),
-      line("Custo/Seguidor:",       m.cpSeg,       fD,  null),``,
-      line("Hook Rate (3s/impr.):", m.hookRate,    fP,  null),
-      line("Hold Rate (15s/3s):",   m.holdRate,    fP,  null),
+      line("Investimento:",                       m.spend,         fD),
+      line("Visitas ao perfil:",                  m.profileVisits, fI),
+      line("Custo por visita ao perfil:",         m.cpVisita,      fD),``,
+      line("Novos seguidores:",                   m.seguidores,    fI),
+      line("Custo por novo seguidor:",            m.cpSeg,         fD),``,
+      line("Tx conv visitantes para seguidores:", m.txConv,        fP1),``,
+      line("CPC:",                                m.cpc,           fD),
+      line("CTR:",                                m.ctr,           fP2),
+      line("CPM:",                                m.cpm,           fD),
     ].join("\n");
   }
 
@@ -1330,7 +1334,7 @@ function renderDistResumo(){
     const fv=val===null?"—":(typeof val==="number"?fmtFn(val):val);
     const badge=meta?em(val,meta):"";
     const metaTxt=meta&&val!==null?`<span style="font-size:10px;color:var(--hint);margin-left:4px">meta ${meta.label}</span>`:"";
-    return `<div style="display:grid;grid-template-columns:180px 1fr auto;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:center">
+    return `<div style="display:grid;grid-template-columns:260px 1fr auto;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:center">
       <span style="color:var(--muted);font-size:12px">${lbl}</span>
       <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-strong)">${fv}</span>
       <span style="font-size:13px;min-width:28px;text-align:right">${badge}${metaTxt}</span>
@@ -1338,27 +1342,21 @@ function renderDistResumo(){
   }
 
   function section(label, m, isHoje=false){
-    const planRow=isHoje?`
-      <div style="display:grid;grid-template-columns:180px 1fr;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:center">
-        <span style="color:var(--muted);font-size:12px">Plan até hj</span>
-        <input id="dist-plan-input"
-          value="${S.distPlanHoje||''}"
-          placeholder="Digitar plan..."
-          oninput="S.distPlanHoje=this.value;renderDistResumo()"
-          style="background:var(--surf);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 8px;outline:none;width:100%;box-sizing:border-box">
-      </div>`:"";
     return `
     <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px">
       <div style="font-size:13px;font-weight:700;color:var(--text-strong);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">📶 ${label}</div>
       ${row("Investimento", m.spend, fD, null)}
-      ${row("Visitas ao Perfil", m.profileVisits, fN, null)}
-      ${row("Custo/Visita", m.cpVisita, fD, null)}
-      ${row("Seguidores", m.seguidores, fN, null)}
-      ${row("Custo/Seguidor", m.cpSeg, fD, null)}
+      ${row("Visitas ao perfil", m.profileVisits, fI, null)}
+      ${row("Custo por visita ao perfil", m.cpVisita, fD, null)}
       <div style="height:8px"></div>
-      ${row("Hook Rate", m.hookRate, fP, null)}
-      ${row("Hold Rate", m.holdRate, fP, null)}
-      ${planRow}
+      ${row("Novos seguidores", m.seguidores, fI, null)}
+      ${row("Custo por novo seguidor", m.cpSeg, fD, null)}
+      <div style="height:8px"></div>
+      ${row("Tx conv visitantes para seguidores", m.txConv, fP1, null)}
+      <div style="height:8px"></div>
+      ${row("CPC", m.cpc, fD, null)}
+      ${row("CTR", m.ctr, fP2, null)}
+      ${row("CPM", m.cpm, fD, null)}
     </div>`;
   }
 
