@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Chrys — Distribuição de Conteúdo</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e17;--card:#121826;--border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.12);
+  --text:#e8edf6;--text-strong:#f1f5fb;--muted:#8a96ab;--hint:#6b7689;
+  --accent:#3b82f6;--accent-bg:rgba(59,130,246,.16);
+  --green:#34d399;--amber:#fbbf24;--red:#f87171;
+  --surf:rgba(255,255,255,.03);
+}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+
+/* ─── App Header ─────────────────────────────────────────────────── */
+.app-hdr{position:sticky;top:0;z-index:20;background:rgba(12,17,28,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);padding:0 26px;height:54px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px}
+
+/* Funil dropdown */
+.funil-wrap{position:relative}
+.funil-btn{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:9px;border:1px solid var(--border);background:var(--surf);cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;transition:border-color .15s}
+.funil-btn:hover{border-color:var(--border-h)}
+.funil-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.funil-name{font-size:12px;font-weight:600;color:var(--text-strong)}
+.funil-status{font-size:9px;color:var(--green);letter-spacing:.04em}
+.funil-chevron{color:var(--muted);font-size:10px;margin-left:2px}
+.funil-menu{position:absolute;top:calc(100% + 6px);left:0;background:#1a2236;border:1px solid var(--border-h);border-radius:10px;padding:4px;min-width:180px;box-shadow:0 6px 30px rgba(2,6,20,.45);z-index:100}
+.funil-opt{padding:8px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);transition:all .12s;display:flex;align-items:center;gap:8px}
+.funil-opt:hover{background:var(--accent-bg);color:var(--text)}
+.funil-opt.fopt-active{background:var(--accent-bg);color:#cfe0ff}
+.fopt-dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.funil-opt.fopt-active .fopt-dot{background:var(--green)}
+
+/* Nav tabs */
+.hdr-tabs{display:flex;align-items:center;gap:4px}
+.htab{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--muted);transition:all .15s;white-space:nowrap}
+.htab:hover{color:var(--text)}
+.htab.htab-active{background:rgba(59,130,246,.16);color:#fff}
+.htab-icon{font-size:13px}
+
+/* Period controls */
+.hdr-right{display:flex;align-items:center;gap:8px}
+.presets{display:flex;gap:4px}
+.btn-pre{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 11px;border-radius:8px;cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .12s;white-space:nowrap}
+.btn-pre:hover{border-color:var(--border-h);color:var(--text)}
+.btn-pre.on{background:rgba(59,130,246,.16);border-color:rgba(96,165,250,.35);color:#cfe0ff;font-weight:600}
+.drbox{display:flex;align-items:center;background:var(--surf);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .15s;padding:0 6px;gap:3px}
+.drbox:focus-within{border-color:rgba(96,165,250,.5)}
+.drbox-icon{color:var(--hint);font-size:12px;user-select:none}
+.drbox input[type=date]{background:transparent;border:none;outline:none;color:var(--text);font-size:11px;font-family:'JetBrains Mono',monospace;padding:5px 4px;cursor:pointer;color-scheme:dark;width:100px}
+.drbox-sep{color:var(--hint);font-size:11px;user-select:none}
+.btn-update{background:rgba(59,130,246,.16);border:1px solid rgba(96,165,250,.3);color:#60a5fa;padding:5px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:600;transition:all .15s;white-space:nowrap;box-shadow:0 0 16px rgba(59,130,246,.2)}
+.btn-update:hover:not(:disabled){box-shadow:0 0 16px rgba(59,130,246,.4)}
+.btn-update:disabled{opacity:.4;cursor:not-allowed}
+
+/* ─── Content ────────────────────────────────────────────────────── */
+.app-content{max-width:1640px;margin:0 auto;padding:22px 30px 40px}
+.page{display:none}.page.active{display:block}
+
+/* Page header */
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.hdr-title{font-size:22px;font-weight:700;font-family:'Sora',sans-serif;color:var(--text-strong);line-height:1.25}
+.hdr-sub{margin-top:5px;font-size:11px;color:var(--hint);font-family:'JetBrains Mono',monospace}
+.err{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:var(--red);line-height:1.5}
+
+/* KPIs */
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:13px}
+.kc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;transition:border-color .2s}
+.kc:hover{border-color:var(--border-h)}
+.kc-lbl{font-size:9px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:700}
+.kc-val{font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:-.02em;font-size:22px;line-height:1.1;color:var(--text-strong)}
+.kc-val-sm{font-size:18px}
+.kc-sub{font-size:10px;color:var(--hint);margin-top:5px;font-family:'JetBrains Mono',monospace}
+.kc-date{font-size:9px;color:var(--hint);margin-bottom:4px;font-family:'JetBrains Mono',monospace;font-weight:500}
+
+/* Section label */
+.section-lbl{font-size:9px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px;margin-top:20px}
+
+/* Status legend */
+.status-legend{display:flex;gap:16px;margin-bottom:14px}
+.sl{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--hint)}
+.sl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* Charts */
+.cc{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px 14px}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.ct{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.lg{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.li{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.ll{width:14px;height:2px;border-radius:2px}
+.ld{width:7px;height:7px;border-radius:50%}
+.charts-2x2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+.charts-2x3{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+
+/* Toggle overlay buttons */
+.overlay-btns{display:flex;gap:6px}
+.btn-overlay{font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid var(--border-h);color:var(--muted);background:transparent;cursor:pointer;transition:all .12s;font-family:'DM Sans',sans-serif}
+.btn-overlay:hover{border-color:var(--accent);color:var(--text)}
+.btn-overlay.on{background:var(--accent-bg);border-color:rgba(96,165,250,.4);color:#60a5fa;font-weight:600}
+
+/* Tooltip */
+.tip{background:#1a2236;border:1px solid var(--border-h);border-radius:8px;padding:10px 13px;font-size:12px;box-shadow:0 4px 16px rgba(2,6,20,.45);display:none;position:absolute;pointer-events:none;z-index:20;min-width:150px}
+.tl{color:var(--hint);margin-bottom:5px;font-weight:500;font-size:10px;font-family:'JetBrains Mono',monospace}
+.tr{display:flex;justify-content:space-between;gap:14px;margin-bottom:2px;font-size:11px}
+.tv{color:var(--text-strong);font-weight:600;font-family:'JetBrains Mono',monospace}
+
+/* Spinner */
+.sw{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:16px}
+.sp{width:32px;height:32px;border:2px solid var(--border);border-top:2px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.st{color:var(--hint);font-size:13px}
+.foot{margin-top:18px;font-size:10px;color:var(--hint);text-align:center;font-family:'JetBrains Mono',monospace;opacity:.5}
+canvas{display:block}
+input[type=date]::-webkit-calendar-picker-indicator{opacity:.4;cursor:pointer;filter:invert(1)}
+
+/* Quick period inside pages (funil / análise) */
+.period-wrap{margin-bottom:18px}
+.period-top{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.period-lbl{font-size:9px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.drbox-sm{display:flex;align-items:center;background:var(--surf);border:1px solid var(--border);border-radius:7px;overflow:hidden;gap:2px;padding:0 5px}
+.drbox-sm input[type=date]{background:transparent;border:none;outline:none;color:var(--text);font-size:11px;font-family:'JetBrains Mono',monospace;padding:4px 4px;cursor:pointer;color-scheme:dark;width:96px}
+.period-quick{display:flex;gap:5px;flex-wrap:wrap}
+.btn-q{background:transparent;border:1px solid var(--border);color:var(--hint);padding:4px 11px;border-radius:6px;cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;transition:all .12s;white-space:nowrap}
+.btn-q:hover{border-color:var(--border-h);color:var(--text)}
+.btn-q.on{background:var(--accent-bg);border-color:rgba(96,165,250,.35);color:#cfe0ff;font-weight:600}
+
+/* Análise sub-tabs */
+.ana-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;gap:0}
+.ana-tab{padding:7px 14px;font-size:11px;font-weight:500;color:var(--hint);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s}
+.ana-tab:hover{color:var(--text)}
+.ana-tab.active{color:#60a5fa;border-bottom-color:#3b82f6}
+
+/* ─── Mobile Responsive ────────────────────────────────────────── */
+@media(max-width:768px){
+  /* ── Header ── */
+  .app-hdr{
+    height:auto;flex-wrap:wrap;
+    padding:0;gap:0;align-items:stretch;
+  }
+  .funil-wrap{
+    padding:9px 14px;flex-shrink:0;
+    border-bottom:1px solid var(--border);
+    width:auto;
+  }
+  .hdr-right{
+    order:2;flex:1;min-width:0;
+    display:flex;align-items:center;gap:6px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    padding:8px 14px 8px 8px;flex-wrap:nowrap;
+    border-bottom:1px solid var(--border);
+  }
+  .hdr-right::-webkit-scrollbar{display:none}
+  .presets{flex-wrap:nowrap;gap:3px}
+  .btn-pre{font-size:10px;padding:4px 8px;flex-shrink:0}
+  .drbox{flex-shrink:0}
+  .drbox input[type=date]{width:86px;font-size:10px}
+  .btn-update{font-size:11px;padding:5px 10px;flex-shrink:0}
+  .hdr-tabs{
+    order:3;width:100%;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    flex-wrap:nowrap;gap:2px;
+    padding:6px 14px 8px;
+  }
+  .hdr-tabs::-webkit-scrollbar{display:none}
+  .htab{flex-shrink:0;font-size:11px;padding:5px 10px}
+  .htab-icon{font-size:12px}
+
+  /* ── Content ── */
+  .app-content{padding:14px 10px 30px;max-width:100%}
+  .hdr{flex-direction:column;gap:6px;margin-bottom:14px}
+  .hdr-title{font-size:18px}
+
+  /* ── KPI Grids ── */
+  .g3,.g4,.g5{
+    grid-template-columns:repeat(2,1fr)!important;
+    gap:8px!important;
+  }
+  .kc{padding:12px 13px}
+  .kc-val{font-size:18px}
+  .kc-val-sm{font-size:15px}
+
+  /* ── Inline repeat grids (render functions) ── */
+  [style*="repeat(3,1fr)"],[style*="repeat(4,1fr)"],
+  [style*="repeat(5,1fr)"],[style*="repeat(6,1fr)"],
+  [style*="repeat(7,1fr)"],[style*="repeat(8,1fr)"]{
+    grid-template-columns:repeat(2,1fr)!important;
+    gap:8px!important;
+  }
+  /* 2-column side-by-side layouts → single column */
+  [style*="1fr 1fr"]{grid-template-columns:1fr!important}
+  /* Funil SVG + cards sidebar → stack */
+  [style*="1fr 260px"]{grid-template-columns:1fr!important}
+  /* Resumo diário 2-col → stack */
+  [style*="220px 1fr"]{grid-template-columns:1fr!important}
+
+  /* ── Charts ── */
+  .charts-2x2,.charts-2x3{
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+  }
+
+  /* ── Tables: allow horizontal scroll ── */
+  .page div[style*="overflow:hidden"]{
+    overflow-x:auto!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .page table{font-size:10px!important}
+  .page td,.page th{
+    padding:7px 8px!important;
+    white-space:nowrap;
+  }
+  /* First column (names/labels) can wrap */
+  .page td:first-child,.page th:first-child{
+    white-space:normal;
+    min-width:90px;max-width:140px;
+  }
+
+  /* ── Status legend ── */
+  .status-legend{flex-wrap:wrap;gap:8px}
+
+  /* ── Period quick buttons ── */
+  .period-quick{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  .period-quick::-webkit-scrollbar{display:none}
+  .btn-q{flex-shrink:0;font-size:10px;padding:3px 9px}
+
+  /* ── Ana sub-tabs ── */
+  .ana-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap}
+  .ana-tabs::-webkit-scrollbar{display:none}
+  .ana-tab{flex-shrink:0;font-size:10px;padding:6px 10px}
+
+  /* ── Section label spacing ── */
+  .section-lbl{margin-top:16px}
+}
+</style>
+</head>
+<body>
+<!-- ─── App Header ───────────────────────────────────────────────── -->
+<header class="app-hdr">
+  <!-- Left: nome do funil (sem seletor: este dashboard tem só a Distribuição) -->
+  <div class="funil-wrap" id="funil-wrap">
+    <div class="funil-btn" style="cursor:default">
+      <span class="funil-dot" id="funil-dot"></span>
+      <div>
+        <div class="funil-name" id="funil-name" style="white-space:nowrap">Chrys - Distribuição</div>
+        <div class="funil-status" id="funil-status">ativo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center: navigation tabs -->
+  <nav class="hdr-tabs" id="hdr-tabs"></nav>
+
+  <!-- Right: period + refresh -->
+  <div class="hdr-right">
+    <div class="presets" id="hdr-presets">
+      <button class="btn-pre" id="hpre-hoje" onclick="applyQuickCurrent('hoje')">Hoje</button>
+      <button class="btn-pre" id="hpre-ontem" onclick="applyQuickCurrent('ontem')">Ontem</button>
+      <button class="btn-pre" id="hpre-3d" onclick="applyQuickCurrent('3d')">Últimos 3 dias</button>
+      <button class="btn-pre" id="hpre-7d" onclick="applyQuickCurrent('7d')">Últimos 7 dias</button>
+      <button class="btn-pre" id="hpre-mes-ant" onclick="applyQuickCurrent('mes-ant')">Mês passado</button>
+      <button class="btn-pre" id="hpre-mes" onclick="applyQuickCurrent('mes')">Este mês</button>
+    </div>
+    <div class="drbox">
+      <span class="drbox-icon">📅</span>
+      <input type="date" id="hdr-start" onchange="onDCCurrent('s',this.value)"/>
+      <span class="drbox-sep">→</span>
+      <input type="date" id="hdr-end" onchange="onDCCurrent('e',this.value)"/>
+    </div>
+    <button class="btn-update" id="btn-update" onclick="loadData(true)">↻ Atualizar</button>
+  </div>
+</header>
+
+<!-- ─── Content ──────────────────────────────────────────────────── -->
+<div class="app-content">
+  <div class="sw" id="loading"><div class="sp"></div><p class="st">Carregando dados...</p></div>
+  <div id="err-panel" style="display:none;align-items:flex-start;justify-content:center;padding:40px 24px"></div>
+  <div id="page-principal"       class="page active"></div>
+  <div id="page-trafego"         class="page"></div>
+  <div id="page-anuncios"        class="page"></div>
+  <div id="page-resumo"          class="page"></div>
+</div>
+
+<script>
+
+// ════════════════════════════════════════════════════════════════════════
+//  CONFIGURAÇÃO — Chrys · Distribuição de Conteúdo
+// ════════════════════════════════════════════════════════════════════════
+// ID da planilha: o trecho entre /d/ e /edit na URL do Google Sheets.
+// A planilha precisa estar compartilhada como "Qualquer pessoa com o link → Leitor".
+const SHEET_ID  = "1J6YKWNtJCUzyY_hhpHkdp96JEgDg-PGw4F-dqUab1C4";
+const GAPI_KEY  = "AIzaSyDFyD63YrWNWSX2gjZWdVD5Bq8uoazXzbE";
+// Aba com o export do Meta Ads (planilha "Base dash - Tese única")
+const SHEET_SEG = "Base seguidores";
+
+// ── Distribuição metas ──────────────────────────────────────────────────
+const METAS_DIST={
+  cpVisita: {val:0.05,  higher:false, label:"R$0,05"},
+  cpSeg:    {val:1.03,  higher:false, label:"R$1,03"},
+  txConv:   {val:5.27,  higher:true,  label:"5,27%"},
+  hookRate: {val:25.56, higher:true,  label:"25,56%"},
+  holdRate: {val:29.02, higher:true,  label:"29,02%"},
+  cpc:      {val:0.05,  higher:false, label:"R$0,05"},
+  ctr:      {val:2.68,  higher:true,  label:"2,68%"},
+  cpm:      {val:1.34,  higher:false, label:"R$1,34"},
+};
+
+// Chart colors — dark mode
+const CHART_COLOR = "#3b82f6";
+const CHART_INV   = "#3b82f6";
+const CHART_CPV   = "#fbbf24";
+
+// State
+const S = {
+  updated:null,
+  loading:true, error:null, firstLoad:true,
+  currentFunil:"dist",
+  // ── Distribuição de Conteúdo data ────────────────────────────────
+  distMeta:{},           // date → {spend,clicks,impressions,video3s,video15s,profileVisits}
+  distMetaByAd:{},       // adName → aggregated
+  distMetaByAdByDate:{}, // adName → date → {...}
+  distMetaByCamp:{},     // campName → aggregated
+  distMetaByCampByDate:{}, // campName → date → {...}
+  distSeg:{},            // date → {seguidores,profileVisits}
+  distSegByAd:{},        // adName → {seguidores,profileVisits}
+  distSegByCamp:{},      // campName → {seguidores,profileVisits}
+  distPlanHoje:"",       // editable plan text for hoje block
+  // Filtro global de datas — compartilhado por todas as abas
+  startDate:"", endDate:"", activeQuick:"",
+  selectedCamps:new Set(),
+  campSearch:"", adSearch:"",
+  distOverlays:{ctr:{inv:false},cpm:{inv:false},cpc:{inv:false}},
+  currentPage:"principal",
+};
+
+// ── Header period helpers ──────────────────────────────────────────────────
+function applyQuickCurrent(k){
+  const t=todayISO();
+  function _mesAnt(){const d=nowSP();const last=new Date(d.getFullYear(),d.getMonth(),0);const y=last.getFullYear();const m=String(last.getMonth()+1).padStart(2,"0");const ld=String(last.getDate()).padStart(2,"0");return{s:`${y}-${m}-01`,e:`${y}-${m}-${ld}`};}
+  const map={hoje:()=>({s:t,e:t}),ontem:()=>{const y=yesterdayISO();return{s:y,e:y}},
+    "3d":()=>({s:nDaysAgoISO(2),e:t}),"7d":()=>({s:nDaysAgoISO(6),e:t}),
+    "mes-ant":_mesAnt,mes:()=>({s:firstOfMonthISO(),e:t})};
+  const r=map[k]?.();if(!r)return;
+  S.startDate=r.s;S.endDate=r.e;S.activeQuick=k;
+  render();
+}
+function onDCCurrent(w,v){
+  if(w==='s')S.startDate=v;else S.endDate=v;S.activeQuick="";
+  render();
+}
+function toggleDistCamp(campName){
+  if(S.selectedCamps.has(campName)) S.selectedCamps.delete(campName);
+  else S.selectedCamps.add(campName);
+  render();
+}
+
+function renderHeader(){
+  const p=S.currentPage;
+  const tabs=[{id:"principal",icon:"⊞",label:"Principal"},{id:"trafego",icon:"⟳",label:"Métricas tráfego"},{id:"anuncios",icon:"◈",label:"Campanhas / Anúncios"},{id:"resumo",icon:"📋",label:"Resumo"}];
+  const tabsEl=document.getElementById("hdr-tabs");
+  if(tabsEl) tabsEl.innerHTML=tabs.map(t=>`<button class="htab${p===t.id?" htab-active":""}" onclick="navTo('${t.id}')"><span class="htab-icon">${t.icon}</span>${t.label}</button>`).join("");
+  // Sync preset buttons active state
+  ["hoje","ontem","3d","7d","mes-ant","mes"].forEach(k=>{
+    const b=document.getElementById("hpre-"+k);
+    if(b) b.classList.toggle("on", S.activeQuick===k);
+  });
+  // Sync date inputs
+  const _hs=document.getElementById("hdr-start"), _he=document.getElementById("hdr-end");
+  if(_hs) _hs.value=S.startDate||"";
+  if(_he) _he.value=S.endDate||"";
+}
+
+function nowSP(){ return new Date(Date.now()-3*60*60*1000); }
+function toISODate(d){ return d.toISOString().split("T")[0]; }
+function todayISO(){ return toISODate(nowSP()); }
+function yesterdayISO(){ const d=nowSP();d.setDate(d.getDate()-1);return toISODate(d); }
+function nDaysAgoISO(n){ const d=nowSP();d.setDate(d.getDate()-n);return toISODate(d); }
+function firstOfMonthISO(){ const d=nowSP();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`; }
+function addDays(iso,n){ const d=new Date(iso+"T12:00:00Z");d.setDate(d.getDate()+n);return toISODate(d); }
+function subDays(iso,n){ return addDays(iso,-n); }
+
+// ── Format helpers ─────────────────────────────────────────────────────────
+function fBRL(n){ return "R$ "+(n||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fBRLShort(n){ const a=Math.abs(n||0),sg=n<0?"-":"";if(a>=1000)return sg+"R$"+(a/1000).toFixed(1)+"k";return sg+"R$"+Math.round(a); }
+function fPct(n){ return (n||0).toFixed(1)+"%"; }
+function fDate(iso){ if(!iso)return"";const[,m,d]=iso.split("-");return `${d}/${m}`; }
+function fDateBR(iso){ if(!iso)return"";const[y,m,d]=iso.split("-");return `${d}/${m}/${y}`; }
+function parseSheet(json){ const rows=json.values||[];if(rows.length<2)return[];const h=rows[0];return rows.slice(1).map(r=>Object.fromEntries(h.map((k,i)=>[k,(r[i]||"").trim()]))); }
+// parseInt seguro: remove separadores de milhar (. ou ,) antes de parsear
+function piS(v){ return parseInt(String(v||"0").replace(/[.,]/g,""))||0; }
+
+// Status color — dark mode semantics
+function statusColor(val,meta,higherIsBetter){
+  if(!val||val===0)return "#8a96ab";
+  const ratio=val/meta;
+  if(higherIsBetter){ if(ratio>=1)return "#34d399";if(ratio>=0.9)return "#fbbf24";return "#f87171"; }
+  else { if(ratio<=1)return "#34d399";if(ratio<=1.1)return "#fbbf24";return "#f87171"; }
+}
+// Card border color from status color
+function statusBorder(val,meta,higherIsBetter){
+  const c=statusColor(val,meta,higherIsBetter);
+  if(c==="#34d399") return "rgba(52,211,153,.22)";
+  if(c==="#fbbf24") return "rgba(251,191,36,.22)";
+  if(c==="#f87171") return "rgba(248,113,113,.22)";
+  return "var(--border)";
+}
+
+// ── Ad ID / advCode helpers ───────────────────────────────────────────────
+
+async function fetchSheetPaged(tab, lastCol="L", pageSize=5000, sheetId=SHEET_ID){
+  const allValues=[];
+  let startRow=1;
+  while(true){
+    const endRow=startRow+pageSize-1;
+    const range=`${encodeURIComponent(tab)}!A${startRow}:${lastCol}${endRow}`;
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${GAPI_KEY}`;
+    const res=await fetch(url);
+    if(!res.ok) throw new Error(`Sheets API: HTTP ${res.status} ao buscar aba "${tab}"`);
+    const data=await res.json();
+    const rows=data.values||[];
+    allValues.push(...rows);
+    if(rows.length<pageSize) break;
+    startRow+=pageSize;
+  }
+  return {values:allValues};
+}
+
+async function loadData(force=false){
+  S.loading=true; S.error=null; render();
+  let segJ;
+  try{
+    if(!SHEET_ID||SHEET_ID.startsWith("COLE_AQUI")) throw new Error('Configure o SHEET_ID no topo do <script> do index.html.');
+    segJ=await fetchSheetPaged(SHEET_SEG,"Z",5000);
+  }catch(e){
+    S.loading=false; S.firstLoad=false;
+    S.error="Falha ao buscar a aba \""+SHEET_SEG+"\": "+e.message;
+    render(); return;
+  }
+  console.log("[sheets] "+SHEET_SEG+":",Math.max(0,segJ.values.length-1),"linhas");
+  S.loading=false; S.error=null;
+
+  try{
+    // ── Seguidores + Distribuição — fonte única: "Base Seguidores" ─────
+    const dD={}, dByAd={}, dByAdByDate={}, dByCamp={}, dByCampByDate={};
+    const sD={}, sByAd={}, sByCamp={};
+    for(const r of parseSheet(segJ)){
+      const dRaw=r["Dia"]||""; if(!dRaw||dRaw==="Dia")continue;
+      let d;
+      if(dRaw.includes("/")){
+        const parts=dRaw.split("/");
+        d=parts.length===3?`${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`:"";
+      } else { d=dRaw; }
+      if(!d)continue;
+      const _acc      =(r["Nome da conta"]||"").toUpperCase();
+      // Aceita "Valor gasto (USD)", "Valor gasto (MXN)" ou "Valor gasto (BRL)"
+      const _spendRawCol=r["Valor gasto (USD)"]||r["Valor gasto (MXN)"]||r["Valor gasto (BRL)"]||"0";
+      const _spendColIsMXN=!r["Valor gasto (USD)"]&&!!r["Valor gasto (MXN)"];
+      const _rawSpend =parseFloat(_spendRawCol.replace(",","."))||0;
+      // CA03/CA04 sempre USD independente do sufixo; (MXN) no nome da conta OU coluna MXN → divide; resto → sem conversão
+      const _isKnownUSD=/^CA0[34]\b/.test(_acc)||_acc.startsWith("CONTA G");
+      const spendUSD  =(!_isKnownUSD&&(_acc.includes("(MXN)")||_spendColIsMXN))?_rawSpend/18:_rawSpend;
+      const clicksV   =piS(r["Cliques no link"]);
+      const impressV  =piS(r["Impressões"]);
+      const video3sV  =piS(r["Reproduções do vídeo por no mínimo 3 segundos"]);
+      const video15sV =piS(r["Reproduções de 25% do vídeo"]);
+      const segV      =piS(r["Seguidores no Instagram"]);
+      const visV      =piS(r["Visitas ao perfil do Instagram"]);
+      // Posts impulsionados vêm sem "Nome do anúncio" → usa o nome da campanha
+      const adName    =((r["Nome do anúncio"]||"").trim()||(r["Nome da campanha"]||"").trim());
+      const campName  =(r["Nome da campanha"]||"").trim();
+      // distMeta (tráfego diário)
+      if(!dD[d])dD[d]={spend:0,clicks:0,impressions:0,video3s:0,video15s:0,profileVisits:0};
+      dD[d].spend+=spendUSD; dD[d].clicks+=clicksV; dD[d].impressions+=impressV;
+      dD[d].video3s+=video3sV; dD[d].video15s+=video15sV; dD[d].profileVisits+=visV;
+      if(adName){
+        if(!dByAd[adName])dByAd[adName]={adName,campName,igUrl:"",spend:0,clicks:0,impressions:0,video3s:0,video15s:0,profileVisits:0,seguidores:0};
+        dByAd[adName].spend+=spendUSD; dByAd[adName].clicks+=clicksV; dByAd[adName].impressions+=impressV;
+        dByAd[adName].video3s+=video3sV; dByAd[adName].video15s+=video15sV; dByAd[adName].profileVisits+=visV;
+        dByAd[adName].seguidores+=segV;
+        if(!dByAdByDate[adName])dByAdByDate[adName]={};
+        if(!dByAdByDate[adName][d])dByAdByDate[adName][d]={spend:0,clicks:0,impressions:0,video3s:0,video15s:0,profileVisits:0};
+        dByAdByDate[adName][d].spend+=spendUSD; dByAdByDate[adName][d].clicks+=clicksV;
+        dByAdByDate[adName][d].impressions+=impressV; dByAdByDate[adName][d].video3s+=video3sV;
+        dByAdByDate[adName][d].video15s+=video15sV; dByAdByDate[adName][d].profileVisits+=visV;
+      }
+      if(campName){
+        if(!dByCamp[campName])dByCamp[campName]={campName,spend:0,clicks:0,impressions:0,video3s:0,video15s:0,profileVisits:0,seguidores:0};
+        dByCamp[campName].spend+=spendUSD; dByCamp[campName].clicks+=clicksV; dByCamp[campName].impressions+=impressV;
+        dByCamp[campName].video3s+=video3sV; dByCamp[campName].video15s+=video15sV; dByCamp[campName].profileVisits+=visV;
+        dByCamp[campName].seguidores+=segV;
+        if(!dByCampByDate[campName])dByCampByDate[campName]={};
+        if(!dByCampByDate[campName][d])dByCampByDate[campName][d]={spend:0,clicks:0,impressions:0,video3s:0,video15s:0,profileVisits:0};
+        dByCampByDate[campName][d].spend+=spendUSD; dByCampByDate[campName][d].clicks+=clicksV;
+        dByCampByDate[campName][d].impressions+=impressV; dByCampByDate[campName][d].video3s+=video3sV;
+        dByCampByDate[campName][d].video15s+=video15sV; dByCampByDate[campName][d].profileVisits+=visV;
+      }
+      // distSeg (seguidores diário)
+      if(!sD[d])sD[d]={seguidores:0,profileVisits:0};
+      sD[d].seguidores+=segV; sD[d].profileVisits+=visV;
+      if(adName){
+        if(!sByAd[adName])sByAd[adName]={seguidores:0,profileVisits:0};
+        sByAd[adName].seguidores+=segV; sByAd[adName].profileVisits+=visV;
+      }
+      if(campName){
+        if(!sByCamp[campName])sByCamp[campName]={seguidores:0,profileVisits:0};
+        sByCamp[campName].seguidores+=segV; sByCamp[campName].profileVisits+=visV;
+      }
+    }
+    S.distMeta=dD; S.distMetaByAd=dByAd; S.distMetaByAdByDate=dByAdByDate;
+    S.distMetaByCamp=dByCamp; S.distMetaByCampByDate=dByCampByDate; S.distSeg=sD; S.distSegByAd=sByAd; S.distSegByCamp=sByCamp;
+    let lastISO="";
+    for(const d of Object.keys(dD)) if(d>lastISO) lastISO=d;
+    S.updated=lastISO||null;
+    S.firstLoad=false;
+  }catch(e){
+    S.error="Erro ao processar dados: "+e.message;
+    S.firstLoad=false;
+    console.error("processing error:",e);
+  }
+  render();
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function navTo(page){
+  S.currentPage=page;
+  window.scrollTo(0,0);
+  document.querySelectorAll(".page").forEach(el=>{
+    el.classList.toggle("active", el.id==="page-"+page);
+  });
+  render();
+}
+
+// ── Canvas drawing ─────────────────────────────────────────────────────────
+const DPR=window.devicePixelRatio||1;
+const GRID_C="rgba(255,255,255,0.06)";
+const TICK_C="#6b7689";
+
+function initCanvas(id,cssW,cssH){
+  const c=document.getElementById(id);if(!c)return null;
+  c.width=Math.round(cssW*DPR);c.height=Math.round(cssH*DPR);
+  c.style.width=cssW+"px";c.style.height=cssH+"px";
+  const ctx=c.getContext("2d");ctx.scale(DPR,DPR);
+  return ctx;
+}
+
+function drawLineArea(ctx,xP,yP,vals,color,fill=true){
+  if(vals.length<2)return;
+  if(fill){
+    const n=vals.length;
+    ctx.beginPath();ctx.moveTo(xP(0),yP(vals[0]));
+    for(let i=1;i<n;i++)ctx.lineTo(xP(i),yP(vals[i]));
+    // find zero Y
+    const yZero=yP(0);
+    ctx.lineTo(xP(n-1),yZero);ctx.lineTo(xP(0),yZero);ctx.closePath();
+    const cH=ctx.canvas.height/DPR;
+    const g=ctx.createLinearGradient(0,0,0,cH);
+    g.addColorStop(0,color+"28");g.addColorStop(1,color+"00");
+    ctx.fillStyle=g;ctx.fill();
+  }
+  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash([]);
+  ctx.moveTo(xP(0),yP(vals[0]));
+  for(let i=1;i<vals.length;i++)ctx.lineTo(xP(i),yP(vals[i]));
+  ctx.stroke();
+}
+
+// Gráfico simples (1 eixo, 1 linha) + overlay opcional nos 2 eixos Y
+function drawChartWithOverlay(id, data, key, fmtY, refVal, refLabel, overlayInv, overlayCpv, cssW, cssH, lineColor){
+  const mainC=lineColor||CHART_COLOR;
+  const ctx=initCanvas(id,cssW,cssH);if(!ctx)return;
+  const P={t:12,r:overlayInv||overlayCpv?52:12,b:26,l:52};
+  const cW=cssW-P.l-P.r, cH=cssH-P.t-P.b;
+
+  const vals=data.map(d=>+(d[key])||0);
+  const invVals=data.map(d=>d.spend||0);
+  const cpvVals=data.map(d=>d.cpv||0);
+
+  // Domínio eixo Y esquerda (métrica principal)
+  let allL=[...vals];if(refVal!=null)allL.push(refVal);
+  const lMax=Math.max(...allL,0.01)*1.2, lMin=0;
+  // Domínio eixo Y direita (overlay)
+  const rVals=overlayCpv?cpvVals:invVals;
+  const rMax=overlayInv||overlayCpv?Math.max(...rVals,0.01)*1.2:1;
+
+  const xP=i=>P.l+(data.length>1?i/(data.length-1):0.5)*cW;
+  const yPL=v=>P.t+cH-((v-lMin)/(lMax-lMin))*cH;
+  const yPR=v=>P.t+cH-((v-0)/(rMax-0))*cH;
+
+  // Grid + eixo Y esquerda
+  ctx.setLineDash([]);
+  for(let i=0;i<=4;i++){
+    const y=P.t+(i/4)*cH;
+    ctx.strokeStyle=GRID_C;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(P.l+cW,y);ctx.stroke();
+    const lv=lMax-(i/4)*(lMax-lMin);
+    ctx.fillStyle=TICK_C;ctx.font="9px 'DM Mono',monospace";ctx.textAlign="right";
+    ctx.fillText(fmtY(lv),P.l-4,y+3);
+  }
+
+  // Eixo Y direita se overlay ativo
+  if(overlayInv||overlayCpv){
+    const ovColor=overlayInv?CHART_INV:CHART_CPV;
+    const ovFmt=overlayInv?fBRLShort:v=>"$"+v.toFixed(2);
+    for(let i=0;i<=4;i++){
+      const rv=rMax-(i/4)*(rMax-0);
+      const y=P.t+(i/4)*cH;
+      ctx.fillStyle=ovColor;ctx.font="9px 'DM Mono',monospace";ctx.textAlign="left";
+      ctx.fillText(ovFmt(rv),P.l+cW+4,y+3);
+    }
+  }
+
+  // Linha de referência
+  if(refVal!=null){
+    const ry=yPL(refVal);
+    ctx.strokeStyle=mainC+"55";ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(P.l,ry);ctx.lineTo(P.l+cW,ry);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=mainC;ctx.font="8px 'Inter',sans-serif";ctx.textAlign="right";
+    ctx.fillText(refLabel||"Meta",P.l+cW,ry-3);
+  }
+
+  // Linha principal
+  drawLineArea(ctx,xP,yPL,vals,mainC,true);
+
+  // Overlay
+  if(overlayInv) drawLineArea(ctx,xP,yPR,invVals,CHART_INV,false);
+  if(overlayCpv) drawLineArea(ctx,xP,yPR,cpvVals,CHART_CPV,false);
+
+  // X labels
+  const step=data.length>60?7:data.length>30?3:data.length>14?2:1;
+  ctx.fillStyle=TICK_C;ctx.font="9px 'DM Mono',monospace";ctx.textAlign="center";ctx.setLineDash([]);
+  data.forEach((d,i)=>{if(i%step===0)ctx.fillText(d.label,xP(i),P.t+cH+18);});
+}
+
+// Linha simples com cor customizável — mesma estrutura do drawChartWithOverlay
+function drawLineChart(id,data,key,fmtY,color,refVal,refLabel,cssW,cssH,showInvest){
+  const hasInv=showInvest&&data.some(function(d){return (d.invest||0)>0;});
+  const ctx=initCanvas(id,cssW,cssH);if(!ctx)return;
+  const P={t:12,r:hasInv?52:12,b:26,l:52};
+  const cW=cssW-P.l-P.r,cH=cssH-P.t-P.b;
+  const vals=data.map(function(d){return +(d[key])||0;});
+  const allV=vals.slice();if(refVal!=null)allV.push(refVal);
+  const vMax=Math.max.apply(null,allV.concat([0.01]))*1.2;
+  const xP=function(i){return P.l+(data.length>1?i/(data.length-1):0.5)*cW;};
+  const yP=function(v){return P.t+cH-((v)/(vMax))*cH;};
+  ctx.setLineDash([]);
+  for(let i=0;i<=4;i++){
+    const y=P.t+(i/4)*cH;
+    ctx.strokeStyle=GRID_C;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(P.l+cW,y);ctx.stroke();
+    const lv=vMax-(i/4)*vMax;
+    ctx.fillStyle=TICK_C;ctx.font="9px 'DM Mono',monospace";ctx.textAlign="right";
+    ctx.fillText(fmtY(lv),P.l-4,y+3);
+  }
+  if(refVal!=null){
+    const ry=yP(refVal);
+    ctx.strokeStyle=color+"55";ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(P.l,ry);ctx.lineTo(P.l+cW,ry);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=color;ctx.font="8px 'Inter',sans-serif";ctx.textAlign="right";
+    ctx.fillText(refLabel||"Meta",P.l+cW,ry-3);
+  }
+  drawLineArea(ctx,xP,yP,vals,color,true);
+  // Overlay: investimento (eixo direito)
+  if(hasInv){
+    const INVEST_C=CHART_INV; // #3b82f6 — mesmo azul da aba principal
+    const invVals=data.map(function(d){return d.invest||0;});
+    const invMax=Math.max.apply(null,invVals.concat([0.01]))*1.3;
+    const yPI=function(v){return P.t+cH-((v)/(invMax))*cH;};
+    drawLineArea(ctx,xP,yPI,invVals,INVEST_C,false);
+    // Eixo direito labels
+    ctx.fillStyle=INVEST_C;ctx.font="9px 'DM Mono',monospace";ctx.textAlign="left";
+    for(let i=0;i<=4;i++){
+      const lv=invMax-(i/4)*invMax;
+      const y=P.t+(i/4)*cH;
+      ctx.fillText(fBRLShort(lv),P.l+cW+4,y+3);
+    }
+  }
+  const step=data.length>60?7:data.length>30?3:data.length>14?2:1;
+  ctx.fillStyle=TICK_C;ctx.font="9px 'DM Mono',monospace";ctx.textAlign="center";ctx.setLineDash([]);
+  data.forEach(function(d,i){if(i%step===0)ctx.fillText(d.label,xP(i),P.t+cH+18);});
+}
+// Gráfico dual-axis (investimento x CPV)
+function drawDual(id,data,cssW,cssH,metaCpv){
+  const ctx=initCanvas(id,cssW,cssH);if(!ctx)return;
+  const P={t:14,r:52,b:28,l:58};
+  const cW=cssW-P.l-P.r,cH=cssH-P.t-P.b;
+  const lVals=data.map(d=>d.spend||0);
+  const rVals=data.map(d=>d.cpv||0);
+  const lMax=Math.max(...lVals,0.01)*1.15;
+  const rMax=Math.max(...rVals,metaCpv||0,0.01)*1.4;
+  const xP=i=>P.l+(data.length>1?i/(data.length-1):0.5)*cW;
+  const yPL=v=>P.t+cH-((v-0)/(lMax-0))*cH;
+  const yPR=v=>P.t+cH-((v-0)/(rMax-0))*cH;
+  ctx.setLineDash([]);
+  for(let i=0;i<=4;i++){
+    const y=P.t+(i/4)*cH;
+    ctx.strokeStyle=GRID_C;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(P.l+cW,y);ctx.stroke();
+    ctx.fillStyle=TICK_C;ctx.font="10px 'DM Mono',monospace";
+    ctx.textAlign="right";ctx.fillText(fBRLShort(lMax-(i/4)*lMax),P.l-5,y+3.5);
+    ctx.textAlign="left";ctx.fillText("$"+(rMax-(i/4)*rMax).toFixed(0),P.l+cW+5,y+3.5);
+  }
+  if(metaCpv){
+    const mY=yPR(metaCpv);
+    ctx.strokeStyle=CHART_CPV+"55";ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(P.l,mY);ctx.lineTo(P.l+cW,mY);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=CHART_CPV;ctx.font="9px 'Inter',sans-serif";ctx.textAlign="left";
+    ctx.fillText("Meta $"+metaCpv,P.l+cW+4,mY-3);
+  }
+  drawLineArea(ctx,xP,yPL,lVals,CHART_INV,true);
+  drawLineArea(ctx,xP,yPR,rVals,CHART_CPV,false);
+  const step=data.length>60?7:data.length>30?3:data.length>14?2:1;
+  ctx.fillStyle=TICK_C;ctx.font="10px 'DM Mono',monospace";ctx.textAlign="center";ctx.setLineDash([]);
+  data.forEach((d,i)=>{if(i%step===0)ctx.fillText(d.label,xP(i),P.t+cH+18);});
+}
+
+// Tooltip genérico
+function setupTip(cid,tid,data,lines,padL=58,padR=12){
+  const c=document.getElementById(cid),t=document.getElementById(tid);
+  if(!c||!t)return;
+  c.addEventListener("mousemove",e=>{
+    const rect=c.getBoundingClientRect();
+    const relX=(e.clientX-rect.left)-padL;
+    const cW=rect.width-padL-padR;
+    if(relX<0||relX>cW||!data.length){t.style.display="none";return;}
+    const d=data[Math.max(0,Math.min(Math.round((relX/cW)*(data.length-1)),data.length-1))];
+    let h=`<div class="tl">${d.label||d.date}</div>`;
+    lines.forEach(l=>{
+      h+=`<div class="tr"><span style="color:${l.color}">${l.name}</span><span class="tv">${(l.fmt||fBRL)(+(d[l.key])||0)}</span></div>`;
+    });
+    t.innerHTML=h;t.style.display="block";
+    const tw=t.offsetWidth,x=e.clientX-rect.left;
+    t.style.left=(x+12+tw>rect.width-8?x-tw-12:x+12)+"px";
+    t.style.top=(e.clientY-rect.top-20)+"px";
+  });
+  c.addEventListener("mouseleave",()=>t.style.display="none");
+}
+
+
+function kpiCard(lbl,val,sub,color,small=false,meta=null,higherIsBetter=null){
+  const bord=(meta!==null&&higherIsBetter!==null)?statusBorder(parseFloat(String(val).replace(/[^\d.,-]/g,"")||"0"),meta,higherIsBetter):"var(--border)";
+  return `<div class="kc" style="border-color:${bord}">
+    <div class="kc-lbl">${lbl}</div>
+    <div class="kc-val${small?" kc-val-sm":""}" style="color:${color||"var(--text-strong)"}">${val}</div>
+    ${sub?`<div class="kc-sub">${sub}</div>`:""}
+  </div>`;
+}
+
+function statusLegend(){
+  return `<div class="status-legend">
+    <span class="sl"><span class="sl-dot" style="background:#34d399"></span>Dentro da meta</span>
+    <span class="sl"><span class="sl-dot" style="background:#fbbf24"></span>Até 10% fora</span>
+    <span class="sl"><span class="sl-dot" style="background:#f87171"></span>Mais de 10% fora</span>
+  </div>`;
+}
+function drawDistDual(id, data, rKey, rRef, rRefLabel, cssW, cssH){
+  const ctx=initCanvas(id,cssW,cssH); if(!ctx)return;
+  const P={t:14,r:58,b:28,l:58};
+  const cW=cssW-P.l-P.r, cH=cssH-P.t-P.b;
+  const lVals=data.map(d=>d.spend||0);
+  const rVals=data.map(d=>d[rKey]||0);
+  const lMax=Math.max(...lVals,0.01)*1.15;
+  const rMax=Math.max(...rVals,rRef||0.01,0.01)*1.4;
+  const xP=i=>P.l+(data.length>1?i/(data.length-1):0.5)*cW;
+  const yPL=v=>P.t+cH-(v/lMax)*cH;
+  const yPR=v=>P.t+cH-(v/rMax)*cH;
+  ctx.setLineDash([]);
+  for(let i=0;i<=4;i++){
+    const y=P.t+(i/4)*cH;
+    ctx.strokeStyle=GRID_C;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(P.l+cW,y);ctx.stroke();
+    ctx.fillStyle=TICK_C;ctx.font="10px 'DM Mono',monospace";
+    ctx.textAlign="right";ctx.fillText(fBRLShort(lMax-(i/4)*lMax),P.l-5,y+3.5);
+    ctx.textAlign="left";ctx.fillText(fBRLShort(rMax-(i/4)*rMax),P.l+cW+5,y+3.5);
+  }
+  if(rRef){
+    const mY=yPR(rRef);
+    ctx.strokeStyle="#f59e0b55";ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(P.l,mY);ctx.lineTo(P.l+cW,mY);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle="#f59e0b";ctx.font="9px 'Inter',sans-serif";ctx.textAlign="left";
+    ctx.fillText(rRefLabel,P.l+cW+4,mY-3);
+  }
+  drawLineArea(ctx,xP,yPL,lVals,CHART_INV,true);
+  drawLineArea(ctx,xP,yPR,rVals,"#f59e0b",false);
+  const step=data.length>60?7:data.length>30?3:data.length>14?2:1;
+  ctx.fillStyle=TICK_C;ctx.font="10px 'DM Mono',monospace";ctx.textAlign="center";ctx.setLineDash([]);
+  data.forEach((d,i)=>{if(i%step===0)ctx.fillText(d.label,xP(i),P.t+cH+18);});
+}
+
+// Bar chart for dist data (seguidores or profile visits)
+function drawDistBar(id, data, key, color, fmtFn, cssW, cssH){
+  const ctx=initCanvas(id,cssW,cssH); if(!ctx)return;
+  const P={t:22,r:16,b:26,l:32};
+  const cW=cssW-P.l-P.r, cH=cssH-P.t-P.b;
+  const n=data.length; if(n===0)return;
+  const vals=data.map(d=>d[key]||0);
+  const maxV=Math.max(...vals,1);
+  for(let i=0;i<=4;i++){
+    const y=P.t+(i/4)*cH;
+    ctx.strokeStyle=GRID_C;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(P.l+cW,y);ctx.stroke();
+  }
+  const slot=cW/n;
+  const barW=Math.max(3,Math.min(28,slot*0.6));
+  for(let i=0;i<n;i++){
+    const v=vals[i];
+    const cx=P.l+slot*i+slot/2;
+    const bh=Math.max(v>0?2:0,(v/maxV)*cH);
+    const x=cx-barW/2;
+    const y=P.t+cH-bh;
+    const g=ctx.createLinearGradient(0,y,0,P.t+cH);
+    g.addColorStop(0,color+"dd");g.addColorStop(1,color+"44");
+    ctx.fillStyle=g;
+    const r=Math.min(3,barW/2,bh/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+barW-r,y);
+    ctx.quadraticCurveTo(x+barW,y,x+barW,y+r);
+    ctx.lineTo(x+barW,y+bh);ctx.lineTo(x,y+bh);ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+    ctx.fill();
+    if(v>0){
+      ctx.fillStyle="#e8edf6";
+      ctx.font=`bold ${Math.max(8,Math.min(11,barW-1))}px 'DM Sans',sans-serif`;
+      ctx.textAlign="center";ctx.fillText(fmtFn(v),cx,y-4);
+    }
+  }
+  const step=n>60?7:n>30?3:n>14?2:1;
+  ctx.fillStyle=TICK_C;ctx.font="9px 'JetBrains Mono',monospace";ctx.textAlign="center";ctx.setLineDash([]);
+  data.forEach((d,i)=>{if(i%step===0)ctx.fillText(d.label,P.l+slot*i+slot/2,P.t+cH+18);});
+}
+
+
+// ── Render ──────────────────────────────────────────────────────────────────
+function render(){
+  // guarda o foco/cursor dos campos de busca (o innerHTML recria os inputs)
+  const _ae=document.activeElement;
+  const _fid=_ae&&_ae.id, _fpos=_ae&&_ae.selectionStart;
+  renderHeader();
+  const ld=document.getElementById("loading");
+  if(S.firstLoad&&S.loading){ld.style.display="flex";return;}
+  ld.style.display="none";
+  // Painel de erro visível
+  const errEl=document.getElementById("err-panel");
+  if(errEl){
+    if(S.error){
+      errEl.style.display="flex";
+      document.querySelectorAll(".page").forEach(el=>el.style.display="none");
+      errEl.innerHTML=`<div style="background:#1e1014;border:1px solid #f87171;border-radius:12px;padding:24px 28px;max-width:700px;width:100%">
+        <div style="color:#f87171;font-weight:700;font-size:15px;margin-bottom:12px">⚠️ Erro ao carregar dados</div>
+        <code style="display:block;color:#fca5a5;font-size:12px;font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-all;line-height:1.6">${S.error.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</code>
+        <button onclick="loadData(true)" style="margin-top:16px;padding:8px 18px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">↻ Tentar novamente</button>
+      </div>`;
+      return;
+    } else { errEl.style.display="none"; document.querySelectorAll(".page").forEach(el=>el.style.display=""); }
+  }
+  if(S.currentPage==="principal") renderDistPrincipal();
+  else if(S.currentPage==="trafego") renderDistTrafego();
+  else if(S.currentPage==="anuncios") renderDistAnuncios();
+  else if(S.currentPage==="resumo") renderDistResumo();
+  if(_fid==="dist-camp-search"||_fid==="dist-ad-search"){
+    const inp=document.getElementById(_fid);
+    if(inp){inp.focus();if(_fpos!=null)inp.setSelectionRange(_fpos,_fpos);}
+  }
+}
+
+// ── Distribuição: helpers ─────────────────────────────────────────────────
+function getDistDaily(start, end){
+  const allDates=new Set([...Object.keys(S.distMeta||{}),...Object.keys(S.distSeg||{})]);
+  return [...allDates].filter(d=>d>=start&&d<=end).sort().map(d=>{
+    const m=S.distMeta[d]||{};
+    const sg=S.distSeg[d]||{};
+    const spend=m.spend||0,clicks=m.clicks||0,impressions=m.impressions||0;
+    const video3s=m.video3s||0,video15s=m.video15s||0,profileVisits=m.profileVisits||0;
+    const seguidores=sg.seguidores||0;
+    const ctr=impressions>0?clicks/impressions*100:0;
+    const cpm=impressions>0?spend/impressions*1000:0;
+    const cpc=clicks>0?spend/clicks:0;
+    const hookRate=impressions>0?video3s/impressions*100:0;
+    const holdRate=video3s>0?video15s/video3s*100:0;
+    const cps=seguidores>0?spend/seguidores:0;
+    const cpVisita=profileVisits>0?spend/profileVisits:0;
+    const [,mm,dd2]=d.split("-");
+    return {date:d,label:`${dd2}/${mm}`,spend,clicks,impressions,video3s,video15s,
+      profileVisits,seguidores,ctr,cpm,cpc,hookRate,holdRate,cps,cpVisita};
+  });
+}
+
+function getDistTotals(start, end){
+  const dD=S.distMeta||{};
+  let spend=0,clicks=0,impressions=0,video3s=0,video15s=0,profileVisits=0;
+  for(const [d,v] of Object.entries(dD)){
+    if(d<start||d>end) continue;
+    spend+=v.spend; clicks+=v.clicks; impressions+=v.impressions;
+    video3s+=v.video3s; video15s+=v.video15s; profileVisits+=v.profileVisits;
+  }
+  const sD=S.distSeg||{};
+  let seguidores=0;
+  for(const [d,v] of Object.entries(sD)){
+    if(d<start||d>end) continue;
+    seguidores+=v.seguidores;
+  }
+  const ctr=impressions>0?clicks/impressions*100:0;
+  const cpm=impressions>0?spend/impressions*1000:0;
+  const cpc=clicks>0?spend/clicks:0;
+  const hookRate=impressions>0?video3s/impressions*100:0;
+  const holdRate=video3s>0?video15s/video3s*100:0;
+  const cps=seguidores>0?spend/seguidores:0;
+  return {spend,clicks,impressions,video3s,video15s,profileVisits,seguidores,ctr,cpm,cpc,hookRate,holdRate,cps};
+}
+
+// ── Distribuição: Principal ───────────────────────────────────────────────
+function renderDistPrincipal(){
+  const el=document.getElementById("page-principal"); if(!el)return;
+  const start=S.startDate, end=S.endDate;
+  const tot=getDistTotals(start,end);
+  const daily=getDistDaily(start,end);
+  const today=todayISO();
+
+  const cpVisitaV=tot.profileVisits>0?tot.spend/tot.profileVisits:0;
+  const cpVisitaC=cpVisitaV>0?statusColor(cpVisitaV,METAS_DIST.cpVisita.val,false):"var(--text-strong)";
+  const cpSegC=tot.cps>0?statusColor(tot.cps,METAS_DIST.cpSeg.val,false):"var(--text-strong)";
+
+  el.innerHTML=`
+    <div class="hdr" style="margin-bottom:6px">
+      <div>
+        <div class="hdr-title">Chrys — Distribuição de Conteúdo</div>
+        <div class="hdr-sub">atualizado em: ${fDateBR(today)} · ${daily.length} dias</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px">${statusLegend()}</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin-bottom:18px">
+      ${kpiCard("Investimento",fBRL(tot.spend),"","var(--text-strong)")}
+      ${kpiCard("Visitas ao Perfil",tot.profileVisits.toLocaleString("pt-BR"),"","var(--text-strong)")}
+      ${kpiCard("Custo/Visita",cpVisitaV>0?fBRL(cpVisitaV):"—","meta "+fBRL(METAS_DIST.cpVisita.val),cpVisitaC,false,cpVisitaV||null,false)}
+      ${kpiCard("Seguidores",tot.seguidores.toLocaleString("pt-BR"),"","var(--text-strong)")}
+      ${kpiCard("Custo/Seguidor",tot.cps>0?fBRL(tot.cps):"—","meta "+fBRL(METAS_DIST.cpSeg.val),cpSegC,false,tot.cps||null,false)}
+    </div>
+
+    <div class="cc" style="margin-bottom:12px;position:relative">
+      <div class="ch">
+        <span class="ct">Investimento × Custo/Seguidor</span>
+        <div class="lg">
+          <span class="li"><span class="ll" style="background:${CHART_INV}"></span>Invest. (esq.)</span>
+          <span class="li"><span class="ll" style="background:#f59e0b"></span>Custo/Seg. (dir.)</span>
+        </div>
+      </div>
+      <div style="position:relative"><canvas id="d-dual-cps"></canvas><div class="tip" id="d-tip-cps"></div></div>
+    </div>
+
+    <div class="cc" style="margin-bottom:12px">
+      <div class="ch">
+        <span class="ct">Volume de Seguidores</span>
+        <div class="lg"><span class="li"><span class="ld" style="background:#34d399"></span>Seguidores/dia</span></div>
+      </div>
+      <canvas id="d-bar-seg"></canvas>
+    </div>
+
+    <div class="cc" style="margin-bottom:12px;position:relative">
+      <div class="ch">
+        <span class="ct">Investimento × Custo/Visita ao Perfil</span>
+        <div class="lg">
+          <span class="li"><span class="ll" style="background:${CHART_INV}"></span>Invest. (esq.)</span>
+          <span class="li"><span class="ll" style="background:#f59e0b"></span>Custo/Visita (dir.)</span>
+        </div>
+      </div>
+      <div style="position:relative"><canvas id="d-dual-cpv"></canvas><div class="tip" id="d-tip-cpv"></div></div>
+    </div>
+
+    <div class="cc" style="margin-bottom:12px">
+      <div class="ch">
+        <span class="ct">Volume de Visitas ao Perfil</span>
+        <div class="lg"><span class="li"><span class="ld" style="background:#60a5fa"></span>Visitas/dia</span></div>
+      </div>
+      <canvas id="d-bar-vis"></canvas>
+    </div>
+    <p class="foot">Base Seguidores (Meta Ads) · Google Sheets API v4</p>
+  `;
+
+  requestAnimationFrame(()=>{
+    const mW=document.getElementById("d-dual-cps")?.parentElement?.offsetWidth||720;
+    const bW=document.getElementById("d-bar-seg")?.parentElement?.offsetWidth||720;
+    drawDistDual("d-dual-cps",daily,"cps",METAS_DIST.cpSeg.val,"Meta/Seg.",mW,200);
+    drawDistBar("d-bar-seg",daily,"seguidores","#34d399",v=>v.toLocaleString("pt-BR"),bW,150);
+    drawDistDual("d-dual-cpv",daily,"cpVisita",METAS_DIST.cpVisita.val,"Meta/Visita",mW,200);
+    drawDistBar("d-bar-vis",daily,"profileVisits","#60a5fa",v=>v.toLocaleString("pt-BR"),bW,150);
+    setupTip("d-dual-cps","d-tip-cps",daily,[
+      {key:"spend",color:CHART_INV,name:"Investimento"},
+      {key:"cps",color:"#f59e0b",name:"Custo/Seg.",fmt:fBRL},
+    ]);
+    setupTip("d-dual-cpv","d-tip-cpv",daily,[
+      {key:"spend",color:CHART_INV,name:"Investimento"},
+      {key:"cpVisita",color:"#f59e0b",name:"Custo/Visita",fmt:fBRL},
+    ]);
+  });
+}
+
+// ── Distribuição: Métricas Tráfego ───────────────────────────────────────
+function renderDistTrafego(){
+  const el=document.getElementById("page-trafego");if(!el)return;
+  const today=todayISO();
+  const start=S.startDate, end=S.endDate;
+  const daily=getDistDaily(start,end);
+
+  // Hoje + últimos 3 dias como totais
+  const todayD=getDistTotals(today,today);
+  const p3Start=subDays(today,3), p3End=subDays(today,1);
+  const p3Tot=getDistTotals(p3Start,p3End);
+
+  const METRICS_ROW=[
+    {key:"spend", lbl:"Investimento", fmt:fBRL, meta:null, higher:null},
+    {key:"ctr",   lbl:"CTR",          fmt:fPct, meta:METAS_DIST.ctr.val, higher:true},
+    {key:"cpm",   lbl:"CPM",          fmt:fBRL, meta:METAS_DIST.cpm.val, higher:false},
+    {key:"cpc",   lbl:"CPC",          fmt:fBRL, meta:METAS_DIST.cpc.val, higher:false},
+  ];
+
+  function metricsRow(obj){
+    return METRICS_ROW.map(m=>{
+      const v=obj[m.key]||0;
+      const color=m.meta!=null?statusColor(v,m.meta,m.higher):"var(--text-strong)";
+      const bord=m.meta!=null?statusBorder(v,m.meta,m.higher):"var(--border)";
+      return `<div class="kc" style="padding:12px 14px;border-color:${bord}">
+        <div class="kc-lbl">${m.lbl}</div>
+        <div class="kc-val" style="color:${color};font-size:17px">${m.fmt(v)}</div>
+        ${m.meta!=null?`<div class="kc-sub">Meta: ${m.fmt(m.meta)}</div>`:""}
+      </div>`;
+    }).join("");
+  }
+
+  const CHART_CONFIGS=[
+    {key:"ctr", lbl:"CTR", fmt:fPct, meta:METAS_DIST.ctr.val, metaLbl:"Meta "+METAS_DIST.ctr.label},
+    {key:"cpm", lbl:"CPM", fmt:fBRL, meta:METAS_DIST.cpm.val, metaLbl:"Meta "+METAS_DIST.cpm.label},
+    {key:"cpc", lbl:"CPC", fmt:fBRL, meta:METAS_DIST.cpc.val, metaLbl:"Meta "+METAS_DIST.cpc.label},
+  ];
+
+  function dChart(c){
+    const ov=S.distOverlays[c.key];
+    const invOn=ov.inv;
+    return `<div class="cc" style="position:relative">
+      <div class="ch">
+        <span class="ct">${c.lbl}</span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:10px;color:var(--hint)">${c.metaLbl}</span>
+          <div class="overlay-btns">
+            <button class="btn-overlay${invOn?" on":""}"
+              style="${invOn?`border-color:${CHART_INV};color:${CHART_INV};background:${CHART_INV}18`:""}"
+              onclick="S.distOverlays['${c.key}'].inv=!S.distOverlays['${c.key}'].inv;renderDistTrafego()">+ Invest.</button>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative">
+        <canvas id="dtc-${c.key}"></canvas>
+        <div class="tip" id="dtt-${c.key}"></div>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=`
+    <div class="hdr" style="margin-bottom:6px">
+      <div>
+        <div class="hdr-title">Métricas de Tráfego — Distribuição</div>
+        <div class="hdr-sub">atualizado em: ${fDateBR(today)} · ${daily.length} dias</div>
+      </div>
+      <div>${statusLegend()}</div>
+    </div>
+
+    <div class="section-lbl">Hoje — ${fDateBR(today)}</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      ${metricsRow(todayD)}
+    </div>
+
+    <div class="section-lbl">Últimos 3 dias — ${fDateBR(p3Start)} a ${fDateBR(p3End)}</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+      ${metricsRow(p3Tot)}
+    </div>
+
+    <div class="charts-2x3">
+      ${CHART_CONFIGS.map(c=>dChart(c)).join("")}
+    </div>
+    <p class="foot">Base Seguidores (Meta Ads) · Google Sheets API v4</p>`;
+
+  requestAnimationFrame(()=>{
+    const sW=document.getElementById("dtc-ctr")?.parentElement?.offsetWidth||500;
+    CHART_CONFIGS.forEach(c=>{
+      const ov=S.distOverlays[c.key];
+      drawChartWithOverlay(`dtc-${c.key}`,daily,c.key,c.fmt,c.meta,c.metaLbl,ov.inv,false,sW,170);
+      const tipLines=[{key:c.key,color:CHART_COLOR,name:c.lbl,fmt:c.fmt}];
+      if(ov.inv) tipLines.push({key:"spend",color:CHART_INV,name:"Investimento",fmt:fBRL});
+      setupTip(`dtc-${c.key}`,`dtt-${c.key}`,daily,tipLines,52,ov.inv?52:12);
+    });
+  });
+}
+
+// ── Distribuição: Campanhas / Anúncios ───────────────────────────────────
+function renderDistAnuncios(){
+  const el=document.getElementById("page-anuncios"); if(!el)return;
+  const start=S.startDate, end=S.endDate;
+
+  // ── Build camp rows filtered by date ──────────────────────────────────────
+  const campRows=Object.values(S.distMetaByCamp||{}).map(c=>{
+    let spend=0,clicks=0,impressions=0,video3s=0,video15s=0,profileVisits=0;
+    const byDate=S.distMetaByCampByDate[c.campName]||{};
+    for(const [d,v] of Object.entries(byDate)){
+      if(d<start||d>end) continue;
+      spend+=v.spend;clicks+=v.clicks;impressions+=v.impressions;
+      video3s+=v.video3s;video15s+=v.video15s;profileVisits+=v.profileVisits;
+    }
+    const seg=(S.distSegByCamp[c.campName]||{seguidores:0}).seguidores;
+    const ctr=impressions>0?clicks/impressions*100:0;
+    const cpm=impressions>0?spend/impressions*1000:0;
+    const cpc=clicks>0?spend/clicks:0;
+    const cps=seg>0?spend/seg:0;
+    const cpVisita=profileVisits>0?spend/profileVisits:0;
+    return {campName:c.campName,spend,clicks,impressions,profileVisits,seguidores:seg,ctr,cpm,cpc,cps,cpVisita};
+  }).filter(r=>r.spend>0).sort((a,b)=>b.spend-a.spend);
+
+  const hasCampFilter=S.selectedCamps.size>0;
+  const filteredCamps=S.campSearch.trim()
+    ?campRows.filter(c=>c.campName.toLowerCase().includes(S.campSearch.trim().toLowerCase()))
+    :campRows;
+
+  // ── Build ad rows filtered by date + selected camps ────────────────────────
+  const adRows=Object.values(S.distMetaByAd||{}).map(a=>{
+    if(hasCampFilter&&!S.selectedCamps.has(a.campName)) return null;
+    let spend=0,clicks=0,impressions=0,video3s=0,video15s=0,profileVisits=0;
+    const byDate=S.distMetaByAdByDate[a.adName]||{};
+    for(const [d,v] of Object.entries(byDate)){
+      if(d<start||d>end) continue;
+      spend+=v.spend;clicks+=v.clicks;impressions+=v.impressions;
+      video3s+=v.video3s;video15s+=v.video15s;profileVisits+=v.profileVisits;
+    }
+    if(spend===0) return null;
+    const seg=(S.distSegByAd[a.adName]||{seguidores:0}).seguidores;
+    const ctr=impressions>0?clicks/impressions*100:0;
+    const cpm=impressions>0?spend/impressions*1000:0;
+    const cpc=clicks>0?spend/clicks:0;
+    const cps=seg>0?spend/seg:0;
+    const cpVisita=profileVisits>0?spend/profileVisits:0;
+    return {adName:a.adName,campName:a.campName,spend,clicks,impressions,profileVisits,seguidores:seg,ctr,cpm,cpc,cps,cpVisita};
+  }).filter(Boolean).sort((a,b)=>b.spend-a.spend);
+
+  const filteredAds=S.adSearch.trim()
+    ?adRows.filter(a=>a.adName.toLowerCase().includes(S.adSearch.trim().toLowerCase()))
+    :adRows;
+
+  // ── KPI totals ─────────────────────────────────────────────────────────────
+  const tot=getDistTotals(start,end);
+  const cpVisitaV=tot.profileVisits>0?tot.spend/tot.profileVisits:0;
+
+  // ── Shared table styles ────────────────────────────────────────────────────
+  const thS="padding:8px 12px;text-align:right;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);color:var(--hint);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;cursor:pointer";
+  const thL="padding:8px 12px;text-align:left;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);color:var(--hint);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em";
+  const td="padding:9px 12px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);border-bottom:1px solid rgba(255,255,255,.04)";
+  const tdL="padding:9px 12px;text-align:left;font-size:11px;color:var(--text);border-bottom:1px solid rgba(255,255,255,.04)";
+
+  // Pre-compute rows HTML (avoids nested backtick issues inside template literals)
+  const _distCampHTML=filteredCamps.map((r,i)=>{
+    const sel=S.selectedCamps.has(r.campName);
+    const bg=sel?"rgba(59,130,246,.12)":i%2?"rgba(255,255,255,.02)":"transparent";
+    const bl=sel?"border-left:2px solid var(--accent)":"border-left:2px solid transparent";
+    const cn=r.campName.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+    const cj=JSON.stringify(r.campName);
+    return "<tr style=\"background:"+bg+";"+bl+";cursor:pointer\" onclick=\"toggleDistCamp("+cj+")\">"
+      +"<td style=\""+tdL+"\"><span style=\"font-size:10px;color:var(--text-strong)\">"+cn+"</span></td>"
+      +"<td style=\""+td+"\">"+fBRL(r.spend)+"</td>"
+      +"<td style=\""+td+"\">"+r.profileVisits.toLocaleString("pt-BR")+"</td>"
+      +"<td style=\""+td+"\">"+(r.cpVisita>0?fBRL(r.cpVisita):"—")+"</td>"
+      +"<td style=\""+td+";font-weight:600;color:var(--text-strong)\">"+(r.seguidores||"—")+"</td>"
+      +"<td style=\""+td+"\">"+(r.cps>0?fBRL(r.cps):"—")+"</td>"
+      +"<td style=\""+td+"\">"+fPct(r.ctr)+"</td>"
+      +"<td style=\""+td+"\">"+fBRL(r.cpm)+"</td>"
+      +"</tr>";
+  }).join("");
+  const _distAdHTML=filteredAds.map((r,i)=>{
+    const bg=i%2?"rgba(255,255,255,.02)":"transparent";
+    const nm=(r.adName.length>50?r.adName.slice(0,50)+"…":r.adName).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+    const tt=r.adName.replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+    return "<tr style=\"background:"+bg+"\">"
+      +"<td style=\""+tdL+"\" title=\""+tt+"\"><div style=\"font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--surf);border:1px solid var(--border-h);border-radius:5px;padding:2px 8px;display:inline-block;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap\">"+nm+"</div></td>"
+      +"<td style=\""+td+"\">"+fBRL(r.spend)+"</td>"
+      +"<td style=\""+td+"\">"+r.profileVisits.toLocaleString("pt-BR")+"</td>"
+      +"<td style=\""+td+"\">"+(r.cpVisita>0?fBRL(r.cpVisita):"—")+"</td>"
+      +"<td style=\""+td+";font-weight:600;color:var(--text-strong)\">"+(r.seguidores||"—")+"</td>"
+      +"<td style=\""+td+"\">"+(r.cps>0?fBRL(r.cps):"—")+"</td>"
+      +"<td style=\""+td+"\">"+fPct(r.ctr)+"</td>"
+      +"<td style=\""+td+"\">"+fBRL(r.cpm)+"</td>"
+      +"</tr>";
+  }).join("");
+
+  el.innerHTML=`
+    <div class="hdr" style="margin-bottom:6px">
+      <div>
+        <div class="hdr-title">Campanhas / Anúncios — Distribuição</div>
+        <div class="hdr-sub">atualizado em: ${fDateBR(todayISO())} · ${campRows.length} campanhas · ${adRows.length} anúncios</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:20px">
+      ${kpiCard("Investimento",fBRL(tot.spend),"","var(--text-strong)")}
+      ${kpiCard("Visitas ao Perfil",tot.profileVisits.toLocaleString("pt-BR"),"","var(--text-strong)")}
+      ${kpiCard("Seguidores",tot.seguidores.toLocaleString("pt-BR"),"","var(--text-strong)")}
+      ${kpiCard("Custo/Seguidor",tot.cps>0?fBRL(tot.cps):"—",tot.cps>0?"meta "+fBRL(METAS_DIST.cpSeg.val):"",tot.cps>0?statusColor(tot.cps,METAS_DIST.cpSeg.val,false):"var(--text-strong)",false,tot.cps||null,false)}
+    </div>
+
+    <div style="color:var(--hint);font-size:11px;margin-bottom:6px">Clique para filtrar anúncios${hasCampFilter?' · <a href="#" onclick="S.selectedCamps=new Set();render();return false" style="color:var(--accent)">Limpar filtro</a>':''}</div>
+    <div style="margin-bottom:8px">
+      <input id="dist-camp-search" value="${S.campSearch}" oninput="S.campSearch=this.value;render()" placeholder="Buscar campanha..."
+        style="width:100%;padding:8px 14px;background:var(--surf);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box">
+    </div>
+    <div style="overflow-x:auto;margin-bottom:28px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="${thL}">Campanha</th>
+          <th style="${thS}">Investimento</th>
+          <th style="${thS}">Visitas ↑</th>
+          <th style="${thS}">Custo/Visita</th>
+          <th style="${thS}">Seguidores</th>
+          <th style="${thS}">Custo/Seg.</th>
+          <th style="${thS}">CTR</th>
+          <th style="${thS}">CPM</th>
+        </tr></thead>
+        <tbody>${_distCampHTML}</tbody>
+      </table>
+    </div>
+
+    <div style="color:var(--hint);font-size:11px;margin-bottom:6px">Anúncios${hasCampFilter?" (filtrados pelas campanhas selecionadas)":""}</div>
+    <div style="margin-bottom:8px">
+      <input id="dist-ad-search" value="${S.adSearch}" oninput="S.adSearch=this.value;render()" placeholder="Buscar anúncio..."
+        style="width:100%;padding:8px 14px;background:var(--surf);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box">
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="${thL}">Anúncio</th>
+          <th style="${thS}">Invest. ↓</th>
+          <th style="${thS}">Visitas</th>
+          <th style="${thS}">Custo/Visita</th>
+          <th style="${thS}">Seguidores</th>
+          <th style="${thS}">Custo/Seg.</th>
+          <th style="${thS}">CTR</th>
+          <th style="${thS}">CPM</th>
+        </tr></thead>
+        <tbody>${_distAdHTML}</tbody>
+      </table>
+    </div>
+  `;
+
+  // Restore search focus
+  const _f=document.activeElement?.id;
+  if(_f==="dist-camp-search"||_f==="dist-ad-search") requestAnimationFrame(()=>document.getElementById(_f)?.focus());
+}
+
+// ── Distribuição: Resumo ──────────────────────────────────────────────────
+function renderDistResumo(){
+  const el=document.getElementById("page-resumo"); if(!el)return;
+  const _resumoFocus=document.activeElement?.id;
+  const today=todayISO(), yest=yesterdayISO();
+  const start=S.startDate||today, end=S.endDate||today;
+
+  function fD(v){ return "R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function fP(v){ return v.toFixed(1).replace(".",",")+"%"; }
+  function fN(v){ return v===0?"0":v.toLocaleString("pt-BR"); }
+  function fDM(iso){ if(!iso)return "—"; const [,m,d]=iso.split("-"); return `${d}/${m}`; }
+
+  function em(val, meta){
+    if(!val||val===0) return "";
+    const ratio=meta.higher?val/meta.val:meta.val/val;
+    if(ratio>=1)   return "🟢";
+    if(ratio>=0.85)return "🟡";
+    return "🔴";
+  }
+
+  function distMetrics(s, e){
+    const dD=S.distMeta||{};
+    let spend=0,clicks=0,impressions=0,video3s=0,video15s=0,profileVisits=0;
+    for(const [d,v] of Object.entries(dD)){
+      if(d<s||d>e) continue;
+      spend+=v.spend;clicks+=v.clicks;impressions+=v.impressions;
+      video3s+=v.video3s;video15s+=v.video15s;profileVisits+=v.profileVisits;
+    }
+    const sD=S.distSeg||{};
+    let seguidores=0;
+    for(const [d,v] of Object.entries(sD)){
+      if(d<s||d>e) continue;
+      seguidores+=v.seguidores;
+    }
+    const ctr=impressions>0?clicks/impressions*100:null;
+    const cpm=impressions>0?spend/impressions*1000:null;
+    const cpc=clicks>0?spend/clicks:null;
+    const hookRate=impressions>0?video3s/impressions*100:null;
+    const holdRate=video3s>0?video15s/video3s*100:null;
+    const cpVisita=profileVisits>0?spend/profileVisits:null;
+    const cpSeg=seguidores>0?spend/seguidores:null;
+    const txConv=profileVisits>0?seguidores/profileVisits*100:null;
+    return {spend,clicks,impressions,profileVisits,seguidores,ctr,cpm,cpc,hookRate,holdRate,cpVisita,cpSeg,txConv};
+  }
+
+  const tot  =distMetrics(start,end);
+  const ontem=distMetrics(yest,yest);
+  const hoje =distMetrics(today,today);
+
+  const dateLabel=start===end?fDM(start):`${fDM(start)} a ${fDM(end)}`;
+
+  // ── Text for copy ─────────────────────────────────────────────────────────
+  function textBlock(label, m){
+    function line(lbl, val, fmtFn, meta, pad=42){
+      const v=val===null?"#DIV/0!":fmtFn(val);
+      const dot=meta?(val===null?"":"\t"+(em(val,meta)||"🔴")+" Meta: "+meta.label):"";
+      return `${lbl.padEnd(pad," ")}${v}${dot}`;
+    }
+    return [
+      `📶 *${label}*`,``,
+      line("Investimento:",         m.spend,       fD,  null),
+      line("Visitas ao Perfil:",    m.profileVisits, fN, null),
+      line("Custo/Visita:",         m.cpVisita,    fD,  METAS_DIST.cpVisita),
+      line("Seguidores:",           m.seguidores,  fN,  null),
+      line("Custo/Seguidor:",       m.cpSeg,       fD,  METAS_DIST.cpSeg),``,
+      line("Hook Rate (3s/impr.):", m.hookRate,    fP,  METAS_DIST.hookRate),
+      line("Hold Rate (15s/3s):",   m.holdRate,    fP,  METAS_DIST.holdRate),
+    ].join("\n");
+  }
+
+  const fullText=[
+    `*Chrys - Distribuição de Conteúdo*`,``,
+    `_${dateLabel}_`,``,
+    textBlock("Total", tot),``,``,
+    textBlock("Ontem",ontem),``,``,
+    textBlock("Hoje",hoje),
+  ].join("\n");
+
+  // ── Visual rows ───────────────────────────────────────────────────────────
+  function row(lbl, val, fmtFn, meta){
+    const fv=val===null?"—":(typeof val==="number"?fmtFn(val):val);
+    const badge=meta?em(val,meta):"";
+    const metaTxt=meta&&val!==null?`<span style="font-size:10px;color:var(--hint);margin-left:4px">meta ${meta.label}</span>`:"";
+    return `<div style="display:grid;grid-template-columns:180px 1fr auto;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:center">
+      <span style="color:var(--muted);font-size:12px">${lbl}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-strong)">${fv}</span>
+      <span style="font-size:13px;min-width:28px;text-align:right">${badge}${metaTxt}</span>
+    </div>`;
+  }
+
+  function section(label, m, isHoje=false){
+    const planRow=isHoje?`
+      <div style="display:grid;grid-template-columns:180px 1fr;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:center">
+        <span style="color:var(--muted);font-size:12px">Plan até hj</span>
+        <input id="dist-plan-input"
+          value="${S.distPlanHoje||''}"
+          placeholder="Digitar plan..."
+          oninput="S.distPlanHoje=this.value;renderDistResumo()"
+          style="background:var(--surf);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 8px;outline:none;width:100%;box-sizing:border-box">
+      </div>`:"";
+    return `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--text-strong);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">📶 ${label}</div>
+      ${row("Investimento", m.spend, fD, null)}
+      ${row("Visitas ao Perfil", m.profileVisits, fN, null)}
+      ${row("Custo/Visita", m.cpVisita, fD, METAS_DIST.cpVisita)}
+      ${row("Seguidores", m.seguidores, fN, null)}
+      ${row("Custo/Seguidor", m.cpSeg, fD, METAS_DIST.cpSeg)}
+      <div style="height:8px"></div>
+      ${row("Hook Rate", m.hookRate, fP, METAS_DIST.hookRate)}
+      ${row("Hold Rate", m.holdRate, fP, METAS_DIST.holdRate)}
+      ${planRow}
+    </div>`;
+  }
+
+  el.innerHTML=`
+    <div class="hdr" style="margin-bottom:16px">
+      <div>
+        <div class="hdr-title">Resumo diário — Distribuição</div>
+        <div class="hdr-sub">período: ${dateLabel} · ontem: ${fDM(yest)} · hoje: ${fDM(today)}</div>
+      </div>
+      <button id="dist-copy-btn" onclick="distCopyResumo()"
+        style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:rgba(59,130,246,.18);border:1px solid rgba(96,165,250,.35);color:#93c5fd;border-radius:9px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif">
+        📋 Copiar resumo
+      </button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start">
+      <div>
+        ${section("Total", tot, false)}
+        ${section("Ontem", ontem, false)}
+        ${section("Hoje", hoje, true)}
+      </div>
+      <div style="position:sticky;top:20px">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">Preview</div>
+          <pre id="dist-resumo-pre" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);white-space:pre-wrap;line-height:1.75;margin:0;user-select:all">${fullText.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</pre>
+        </div>
+      </div>
+    </div>
+    <p class="foot">Ontem e Hoje são sempre datas fixas · Total reflete o filtro de datas do header</p>
+  `;
+
+  document.getElementById("dist-resumo-pre")._text=fullText;
+
+  if(_resumoFocus==="dist-plan-input"){
+    requestAnimationFrame(()=>{
+      const inp=document.getElementById("dist-plan-input");
+      if(inp){inp.focus();const l=inp.value.length;inp.setSelectionRange(l,l);}
+    });
+  }
+}
+
+function distCopyResumo(){
+  const pre=document.getElementById("dist-resumo-pre");
+  const text=pre?._text||"";
+  if(!text)return;
+  navigator.clipboard.writeText(text).then(()=>{
+    const b=document.getElementById("dist-copy-btn");
+    if(b){const o=b.innerHTML;b.innerHTML="✓ Copiado!";b.style.color="#4ade80";setTimeout(()=>{b.innerHTML=o;b.style.color="";},1800);}
+  }).catch(()=>alert("Selecione o texto manualmente."));
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+S.startDate=nDaysAgoISO(29); S.endDate=todayISO();
+loadData();
+window.addEventListener("resize",()=>{ clearTimeout(window._rz); window._rz=setTimeout(render,150); });
+</script>
+</body>
+</html>
